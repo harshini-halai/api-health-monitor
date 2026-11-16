@@ -1,7 +1,7 @@
 import sqlite3
 from typing import Iterator
 
-from sqlalchemy import create_engine, event, inspect
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from backend.config import DATABASE_URL, DB_PATH
@@ -131,5 +131,12 @@ def get_stats(url):
 
 
 if __name__ == "__main__":
-    init_db()
-    print("Tables:", sorted(inspect(engine).get_table_names()))
+    # Re-import through the package so models and init_db share ONE Base.
+    # (Running this file as __main__ would otherwise create a second Base.)
+    from sqlalchemy import inspect
+
+    from backend.database import engine as _engine
+    from backend.database import init_db as _init_db
+
+    _init_db()
+    print("Tables:", sorted(inspect(_engine).get_table_names()))
