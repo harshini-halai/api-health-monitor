@@ -1,72 +1,103 @@
-
+import logging
+import threading
+import time
+from collections import defaultdict, deque
+from contextlib import asynccontextmanager
 from pathlib import Path
-from unittest import result
-from backend.database import create_table, save_check, get_history
-from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
+
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, HttpUrl
-from backend.database import get_stats
-from backend.monitor import check_website
+from fastapi.staticfiles import StaticFiles
 
+from backend import security
+from backend.auth import router as auth_router
+from backend.database import init_db
+from backend.monitor import UnsafeURLError, check_website, coerce_scheme, validate_public_url
+from backend.scheduler import start_scheduler, stop_scheduler
+from backend.schemas import DemoIn
+from backend.websites import router as websites_router
 
-app = FastAPI(
-    title="API Health Monitor",
-    description="A simple website availability monitoring tool",
-    version="1.0.0"
-)
+logging.basicConfig(level=logging.INFO)
 
-@app.on_event("startup")
-def startup():
-    create_table()
-
-# Locate the frontend folder
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
 
-# Serve CSS and JavaScript files
-app.mount(
-    "/static",
-    StaticFiles(directory=FRONTEND_DIR),
-    name="static"
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    security._secret()  # fail fast with a clear message if JWT_SECRET is missing
+    init_db()
+    start_scheduler()
+    yield
+    stop_scheduler()
+
+
+app = FastAPI(
+    title="Website Health Monitor",
+    description="Monitor website availability, response time and history.",
+    version="2.0.0",
+    lifespan=lifespan,
 )
 
 
-class MonitorRequest(BaseModel):
-    url: HttpUrl
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    return response
 
 
-@app.get("/")
+# ---- tiny in-memory rate limit for the public demo endpoint ---------------
+_demo_hits: dict[str, deque] = defaultdict(deque)
+_demo_lock = threading.Lock()
+DEMO_LIMIT, DEMO_WINDOW = 8, 60
+
+
+def _demo_allowed(ip: str) -> bool:
+    now = time.monotonic()
+    with _demo_lock:
+        q = _demo_hits[ip]
+        while q and now - q[0] > DEMO_WINDOW:
+            q.popleft()
+        if len(q) >= DEMO_LIMIT:
+            return False
+        q.append(now)
+        return True
+
+
+app.include_router(auth_router)
+app.include_router(websites_router)
+
+
+@app.get("/health", tags=["system"])
+def health_check():
+    return {"status": "healthy"}
+
+
+@app.post("/demo/check", tags=["demo"])
+def demo_check(data: DemoIn, request: Request):
+    """Public live check for the landing page. Nothing is saved."""
+    ip = request.client.host if request.client else "unknown"
+    if not _demo_allowed(ip):
+        raise HTTPException(429, "Too many demo checks. Please wait a minute and try again.")
+    try:
+        url = validate_public_url(coerce_scheme(data.url))
+    except UnsafeURLError as e:
+        raise HTTPException(400, str(e))
+    result = check_website(url)
+    result["demo"] = True
+    return result
+
+
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
+
+@app.get("/", include_in_schema=False)
 def home():
     return FileResponse(FRONTEND_DIR / "index.html")
 
 
-@app.get("/health")
-def health_check():
-    return {
-        "status": "healthy"
-    }
-
-
-@app.post("/monitor")
-def monitor_website(data: MonitorRequest):
-
-    try:
-        result = check_website(str(data.url))
-        save_check(result)
-        return result
-
-    except ValueError as error:
-        raise HTTPException(
-            status_code=400,
-            detail=str(error)
-        )
-@app.get("/history")
-def monitoring_history(url: HttpUrl):
-
-    return get_history(str(url))
-
-@app.get("/stats")
-def website_stats(url: HttpUrl):
-
-    return get_stats(str(url))
+@app.get("/dashboard", include_in_schema=False)
+def dashboard():
+    return FileResponse(FRONTEND_DIR / "dashboard.html")
