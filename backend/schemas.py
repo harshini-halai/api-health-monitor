@@ -83,3 +83,24 @@ class WebsiteOut(BaseModel):
 
 class DemoIn(BaseModel):
     url: str = Field(min_length=1, max_length=2048)
+
+class PairingStartOut(BaseModel):
+    code: str
+    expires_at: datetime
+    expires_in_seconds: int
+
+
+class PairingExchangeIn(BaseModel):
+    code: str = Field(min_length=4, max_length=32)
+
+
+class ExtensionTokenOut(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_at: datetime
+    user: UserOut
+
+
+class ExtensionStatusOut(BaseModel):
+    active_tokens: int
+    last_used_at: datetime | None = None

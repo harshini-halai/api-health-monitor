@@ -643,12 +643,14 @@
     websites: "My Websites",
     history: "Monitoring History",
     analytics: "Analytics",
+      extension: "Chrome Extension",
   };
   const renderers = {
     overview: renderOverview,
     websites: renderWebsites,
     history: renderHistory,
     analytics: renderAnalytics,
+      extension: renderExtension,
     site: renderSite,
   };
   let current = { name: "overview", id: null };
@@ -690,6 +692,136 @@
           '<a class="btn" href="#overview">Back to overview</a>',
         );
       }
+    }
+  }
+
+  
+  async function renderExtension() {
+    const el = $("#view-extension");
+    let status = { active_tokens: 0 }; try { status = await api("/extension/status"); } catch {}
+    const EXT_ID_KEY = "whm_chrome_ext_id";
+    const CHROME_STORE_URL = "";
+    const savedExtId = localStorage.getItem(EXT_ID_KEY) || "";
+
+    function sendToExtension(extId, payload) {
+      return new Promise((resolve) => {
+        if (!extId || !window.chrome?.runtime?.sendMessage) {
+          resolve(null);
+          return;
+        }
+        try {
+          chrome.runtime.sendMessage(extId, payload, (resp) => {
+            if (chrome.runtime.lastError) resolve(null);
+            else resolve(resp || null);
+          });
+        } catch {
+          resolve(null);
+        }
+      });
+    }
+
+    const ping = savedExtId ? await sendToExtension(savedExtId, { type: "WHM_PING" }) : null;
+    const isInstalled = Boolean(ping?.installed);
+
+    el.innerHTML = `
+      <div class="card" style="padding:24px; max-width:600px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px;">
+          <div>
+            <h3 style="margin-bottom:4px;">Website Health Monitor for Chrome</h3>
+            <p class="muted small">Check live uptime, latency, and trigger instant checks directly from Chrome.</p>
+          </div>
+          <span class="pill ${status.active_tokens > 0 ? "operational" : "unknown"}">
+            ${status.active_tokens > 0 ? "Connected" : "Not paired"}
+          </span>
+        </div>
+
+        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div>
+              <strong style="font-size:14px;">1. Add Extension to Chrome</strong>
+              <p class="muted small" style="margin-top:2px;">
+                ${isInstalled ? "Detected in your Chrome browser." : "Download and load the extension in Chrome to enable 1-click pairing."}
+              </p>
+            </div>
+            ${
+              CHROME_STORE_URL
+                ? `<a class="btn btn-primary btn-sm" href="${CHROME_STORE_URL}" target="_blank" rel="noopener">Add to Chrome &#8599;</a>`
+                : `<a class="btn btn-primary btn-sm" href="/extension/download" download>Add to Chrome (.zip) &#8595;</a>`
+            }
+          </div>
+          <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border); display:flex; gap:8px; align-items:center;">
+            <input type="text" id="ext-id-input" value="${savedExtId}" placeholder="Paste Chrome Extension ID for 1-click auto-pair" style="font-size:12px; padding:8px 10px;" />
+            <button type="button" class="btn btn-sm" id="ext-save-id-btn">Save ID</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button class="btn btn-primary" id="ext-generate-btn">
+            ${isInstalled ? "Connect Extension (1-Click)" : "Connect Extension"}
+          </button>
+          ${status.active_tokens > 0 ? '<button class="btn btn-danger" id="ext-revoke-btn">Disconnect All</button>' : ""}
+        </div>
+
+        <div id="ext-code-box" class="hidden" style="background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:14px; margin-top:16px; text-align:center;">
+          <div class="small muted" style="margin-bottom:4px;">One-Time Pairing Code (valid 10 min)</div>
+          <div id="ext-pairing-code" style="font-size:24px; font-weight:800; letter-spacing:0.14em; font-family:monospace; color:var(--accent);"></div>
+        </div>
+      </div>
+    `;
+
+    $("#ext-save-id-btn").addEventListener("click", () => {
+      const val = $("#ext-id-input").value.trim();
+      if (val) localStorage.setItem(EXT_ID_KEY, val);
+      else localStorage.removeItem(EXT_ID_KEY);
+      toast("Extension ID saved", "success");
+      route(true);
+    });
+
+    $("#ext-generate-btn").addEventListener("click", async (ev) => {
+      const btn = ev.currentTarget;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Connecting?';
+      try {
+        const res = await api("/extension/pair/start", { method: "POST" });
+        const extId = localStorage.getItem(EXT_ID_KEY) || "";
+        const autoRes = extId
+          ? await sendToExtension(extId, {
+              type: "WHM_AUTO_PAIR",
+              code: res.code,
+              apiBaseUrl: window.location.origin
+            })
+          : null;
+
+        if (autoRes && autoRes.ok) {
+          toast("Chrome Extension connected automatically!", "success");
+          await route(true);
+          return;
+        }
+
+        $("#ext-pairing-code").textContent = res.code;
+        $("#ext-code-box").classList.remove("hidden");
+        toast("Code generated ? paste in extension or save Extension ID for 1-click connect", "info");
+      } catch (err) {
+        toast(err.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = isInstalled ? "Reconnect Extension (1-Click)" : "Connect Extension";
+      }
+    });
+
+    const revokeBtn = $("#ext-revoke-btn");
+    if (revokeBtn) {
+      revokeBtn.addEventListener("click", async () => {
+        try {
+          await api("/extension/disconnect", { method: "POST" });
+          const extId = localStorage.getItem(EXT_ID_KEY) || "";
+          if (extId) await sendToExtension(extId, { type: "WHM_REMOTE_DISCONNECT" });
+          toast("All extension sessions disconnected", "success");
+          route(true);
+        } catch (err) {
+          toast(err.message, "error");
+        }
+      });
     }
   }
 

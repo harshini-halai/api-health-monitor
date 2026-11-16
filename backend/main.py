@@ -38,6 +38,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"^chrome-extension://.*$",
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+)
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):

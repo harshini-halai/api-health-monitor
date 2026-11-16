@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Website Health Monitor</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="header">
+        <div class="brand">
+          <span class="logo-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12h4l3-7 4 14 3-7h4" />
+            </svg>
+          </span>
+          <div>
+            <div class="brand-title">Website Health Monitor</div>
+            <div class="brand-sub" id="api-env-label">127.0.0.1:8000</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <span class="conn-badge disconnected" id="conn-badge">
+            <span class="dot"></span>
+            <span id="conn-text">Offline</span>
+          </span>
+          <button class="icon-btn" id="settings-toggle" title="API Server Settings" aria-label="API Server Settings">&#9881;</button>
+        </div>
+      </header>
+
+      <section class="settings-panel hidden" id="settings-panel">
+        <label class="field-label" for="api-url-input">Backend API Base URL</label>
+        <div class="settings-row">
+          <input type="url" id="api-url-input" placeholder="http://127.0.0.1:8000" />
+          <button class="btn btn-sm btn-primary" id="save-api-url">Save</button>
+        </div>
+        <div class="preset-row">
+          <button type="button" class="link-btn" data-preset="local">Use Local (8000)</button>
+          <button type="button" class="link-btn" data-preset="production">Use Production</button>
+        </div>
+      </section>
+
+      <div class="banner hidden" id="alert-banner" role="status"></div>
+
+      <section class="tab-bar hidden" id="current-tab-bar">
+        <div class="tab-info">
+          <span class="tab-label">Active Tab:</span>
+          <span class="tab-url" id="current-tab-url" title=""></span>
+        </div>
+        <span class="tab-status" id="current-tab-status"></span>
+      </section>
+
+      <main class="view" id="pairing-view">
+        <div class="card pairing-card">
+          <div class="pairing-icon">&#128279;</div>
+          <h1>Connect Your Account</h1>
+          <p class="muted">
+            Open your <strong>Website Health Monitor</strong> dashboard, go to <em>Chrome Extension</em>, and generate a one-time pairing code.
+          </p>
+          <form id="pairing-form" class="pairing-form">
+            <label class="field-label" for="pairing-code-input">8-Character Pairing Code</label>
+            <input type="text" id="pairing-code-input" class="code-input" placeholder="XXXX-XXXX" maxlength="9" autocomplete="off" spellcheck="false" required />
+            <button type="submit" class="btn btn-primary btn-block" id="connect-btn">Connect Extension</button>
+          </form>
+          <div class="pairing-help">
+            <button type="button" class="btn btn-sm btn-block" id="pair-open-dashboard">Open Dashboard to Get Code &#8599;</button>
+          </div>
+        </div>
+      </main>
+
+      <main class="view hidden" id="monitor-view">
+        <section class="account-bar">
+          <div class="account-meta">
+            <div class="avatar" id="user-avatar">U</div>
+            <div class="account-text">
+              <div class="account-name" id="user-name">Loading?</div>
+              <div class="account-email" id="user-email"></div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-xs btn-danger" id="disconnect-btn">Disconnect</button>
+        </section>
+
+        <section class="summary-strip">
+          <div class="stat"><strong id="stat-total">0</strong><span>Total</span></div>
+          <div class="stat ok"><strong id="stat-ok">0</strong><span>Healthy</span></div>
+          <div class="stat warn"><strong id="stat-warn">0</strong><span>Degraded</span></div>
+          <div class="stat bad"><strong id="stat-bad">0</strong><span>Down</span></div>
+        </section>
+
+        <section class="websites-list" id="websites-list"></section>
+      </main>
+
+      <footer class="footer">
+        <div class="footer-actions">
+          <button type="button" class="btn btn-sm" id="refresh-btn">&#8635; Refresh</button>
+          <button type="button" class="btn btn-sm btn-primary" id="dashboard-btn">Open Dashboard &#8599;</button>
+        </div>
+        <div class="footer-note">
+          Auto-monitored every 5m by backend &middot; <a href="#" id="help-link">Pairing Help</a>
+        </div>
+      </footer>
+    </div>
+    <script src="config.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
