@@ -3,26 +3,208 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>API Health Monitor</title>
+    <title>Website Health Monitor: know your website is healthy</title>
+    <meta name="description" content="Monitor your websites, track availability, understand performance, and stay informed with one simple platform." />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("whm_theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          document.documentElement.setAttribute("data-theme", t);
+        } catch (e) {}
+        document.documentElement.classList.add("js");
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%88%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/static/theme.css" />
     <link rel="stylesheet" href="/static/style.css" />
   </head>
-  <body>
-    <main class="container">
-      <h1>API Health Monitor</h1>
-      <p>Check whether a website is responding.</p>
+  <body id="top">
+    <header class="nav">
+      <div class="container nav-inner">
+        <a class="logo" href="#top">
+          <span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4" /></svg></span>
+          Health Monitor
+        </a>
+        <nav class="nav-links" id="nav-links" aria-label="Main">
+          <a href="#top">Home</a>
+          <a href="#features">Features</a>
+          <a href="#how">How it works</a>
+          <a href="#demo">Demo</a>
+          <a href="#faq">FAQ</a>
+          <a href="/docs" target="_blank" rel="noopener">API docs</a>
+        </nav>
+        <div class="nav-actions">
+          <button class="btn icon-btn" id="theme-btn" aria-label="Toggle light/dark theme" title="Toggle theme">◐</button>
+          <button class="btn" data-open-auth="login" id="nav-login">Login</button>
+          <button class="btn btn-primary" data-open-auth="register" id="nav-start">Get started</button>
+          <button class="btn icon-btn menu-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false">☰</button>
+        </div>
+      </div>
+    </header>
 
-      <form id="monitor-form">
-        <input
-          type="url"
-          id="url-input"
-          placeholder="https://example.com"
-          required
-        />
-        <button type="submit" id="check-button">Check Website</button>
-      </form>
+    <main>
+      <section class="hero">
+        <div class="container hero-grid">
+          <div>
+            <span class="eyebrow">● Uptime &amp; response-time monitoring</span>
+            <h1>Know Your Website Is Healthy. <span>Before Your Users Notice.</span></h1>
+            <p class="lead">Monitor your websites, track availability, understand performance, and stay informed with one simple platform.</p>
+            <div class="hero-cta">
+              <button class="btn btn-primary btn-lg" data-open-auth="register">Get Started Free</button>
+              <a class="btn btn-lg" href="#demo">Explore Demo</a>
+            </div>
+            <p class="hero-note">Checks run on our servers every 5 minutes, even when your browser is closed.</p>
+          </div>
 
-      <div id="result" class="result hidden"></div>
+          <div class="card preview reveal" aria-label="Illustrative dashboard preview">
+            <div class="preview-top">
+              <div class="dots"><i></i><i></i><i></i></div>
+              <span class="sample-tag">ILLUSTRATIVE SAMPLE: NOT REAL DATA</span>
+            </div>
+            <div class="mini-stats">
+              <div class="mini-stat"><small>Websites</small><b>3</b></div>
+              <div class="mini-stat"><small>Avg response</small><b>212 ms</b></div>
+              <div class="mini-stat"><small>Availability</small><b>99.2%</b></div>
+            </div>
+            <svg class="spark" viewBox="0 0 300 90" preserveAspectRatio="none" aria-hidden="true">
+              <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5457ee" stop-opacity=".35" /><stop offset="1" stop-color="#5457ee" stop-opacity="0" /></linearGradient></defs>
+              <path d="M0 60 C25 50 40 70 65 55 S110 25 135 45 S185 70 210 40 S265 30 300 38 L300 90 L0 90Z" fill="url(#g)" />
+              <path d="M0 60 C25 50 40 70 65 55 S110 25 135 45 S185 70 210 40 S265 30 300 38" fill="none" stroke="#5457ee" stroke-width="2.5" />
+            </svg>
+            <div class="sample-row"><span>shop.example.com</span><span class="pill operational">Operational</span><span class="muted">184 ms</span></div>
+            <div class="sample-row"><span>blog.example.com</span><span class="pill degraded">Degraded</span><span class="muted">2,310 ms</span></div>
+            <div class="sample-row"><span>api.example.com</span><span class="pill down">Down</span><span class="muted">n/a</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt" id="why">
+        <div class="container">
+          <div class="section-head reveal">
+            <h2>Why website monitoring matters</h2>
+            <p>Most outages are noticed by visitors first. Monitoring flips that around.</p>
+          </div>
+          <div class="grid-auto">
+            <div class="card problem reveal"><h3>Unexpected downtime</h3><p>If your site is unreachable, you want to know within minutes, not when a customer emails you.</p></div>
+            <div class="card problem reveal"><h3>Slow response times</h3><p>A page that technically loads but takes seconds to answer still costs you visitors.</p></div>
+            <div class="card problem reveal"><h3>Undetected failures</h3><p>A server can answer with an error page and still look "up" at a glance. Status codes tell the truth.</p></div>
+            <div class="card problem reveal"><h3>No history</h3><p>Without recorded checks you can't tell whether today's problem is new or has been creeping in.</p></div>
+            <div class="card problem reveal"><h3>Many websites, one view</h3><p>Juggling several sites gets messy. One dashboard keeps them all in sight.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="container">
+          <div class="section-head reveal">
+            <h2>Everything you need to keep an eye on your sites</h2>
+            <p>Features marked <b>Available</b> work today. Others are clearly labelled as coming soon.</p>
+          </div>
+          <div class="grid-auto">
+            <div class="card feature reveal"><div class="ico">◎</div><h3>Availability monitoring</h3><p>Know whether your site responds, and whether the response is actually healthy.</p><span class="badge live">Available</span></div>
+            <div class="card feature reveal"><div class="ico">⚡</div><h3>Response time tracking</h3><p>Every check records how long the server took to respond, in milliseconds.</p><span class="badge live">Available</span></div>
+            <div class="card feature reveal"><div class="ico">↻</div><h3>Automatic monitoring</h3><p>Websites are checked every 5 minutes by the backend, with no browser tab required.</p><span class="badge live">Available</span></div>
+            <div class="card feature reveal"><div class="ico">☰</div><h3>Monitoring history</h3><p>Browse and filter every recorded check by website, status and date range.</p><span class="badge live">Available</span></div>
+            <div class="card feature reveal"><div class="ico">▥</div><h3>Performance analytics</h3><p>Charts for response time, observed availability and check activity.</p><span class="badge live">Available</span></div>
+            <div class="card feature reveal"><div class="ico">⊞</div><h3>Multiple websites</h3><p>Add, edit, pause and remove websites from a single dashboard.</p><span class="badge live">Available</span></div>
+            <div class="card feature reveal"><div class="ico">●</div><h3>Clear status indicators</h3><p>Operational, Degraded, Down or Unknown, with the reason shown for every non-healthy check.</p><span class="badge live">Available</span></div>
+            <div class="card feature reveal"><div class="ico">⧉</div><h3>Chrome extension</h3><p>Check your websites from the browser toolbar after pairing with your account.</p><span class="badge soon">Coming soon</span></div>
+            <div class="card feature reveal"><div class="ico">▤</div><h3>Health reports</h3><p>Shareable summaries of how your sites have been doing.</p><span class="badge soon">Coming soon</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt" id="how">
+        <div class="container">
+          <div class="section-head reveal"><h2>How it works</h2><p>From sign-up to your first health report in a couple of minutes.</p></div>
+          <div class="steps">
+            <div class="card step reveal"><h3>Create your account</h3><p>Sign up with your email. Your websites and history stay private to you.</p></div>
+            <div class="card step reveal"><h3>Add your website URL</h3><p>Paste a public URL. We run a first check right away.</p></div>
+            <div class="card step reveal"><h3>We monitor it</h3><p>Our backend re-checks every 5 minutes and stores each result.</p></div>
+            <div class="card step reveal"><h3>Review health &amp; trends</h3><p>Use the dashboard to see status, history and charts.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="demo">
+        <div class="container">
+          <div class="section-head reveal"><h2>Try a live check</h2><p>Enter any public website. This is a real request made right now. Nothing is saved.</p></div>
+          <div class="card demo-card reveal">
+            <form class="demo-form" id="demo-form" novalidate>
+              <label class="sr-only" for="demo-url">Website URL</label>
+              <input type="text" id="demo-url" placeholder="https://example.com" autocomplete="off" required />
+              <button class="btn btn-primary" type="submit" id="demo-btn">Check website</button>
+            </form>
+            <div class="demo-result" id="demo-result" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt" id="faq">
+        <div class="container">
+          <div class="section-head reveal"><h2>Frequently asked questions</h2></div>
+          <div class="faq">
+            <details class="card"><summary>What is website monitoring?</summary><p>Automatically requesting your website at regular intervals and recording whether it responded, how fast, and with what status code.</p></details>
+            <details class="card"><summary>How frequently are websites checked?</summary><p>Every 5 minutes, and you can run a manual check at any time from the dashboard.</p></details>
+            <details class="card"><summary>Can I monitor multiple websites?</summary><p>Yes. Each account can monitor up to 25 websites.</p></details>
+            <details class="card"><summary>Does monitoring work when my browser is closed?</summary><p>Yes. Checks are run by the backend scheduler, not by your browser.</p></details>
+            <details class="card"><summary>What does response time mean?</summary><p>The time between sending the request and receiving the server's response headers, including any redirects, in milliseconds.</p></details>
+            <details class="card"><summary>What do Operational, Degraded and Down mean?</summary><p><b>Operational:</b> a successful 2xx response that arrived quickly. <b>Degraded:</b> the server responded but something is off (a redirect that did not resolve, a 4xx response, or a very slow 2xx). <b>Down:</b> a 5xx error, or the site could not be reached (timeout, DNS or SSL failure).</p></details>
+            <details class="card"><summary>How will the Chrome extension connect?</summary><p>The extension is not available yet. It will connect through a short-lived one-time pairing code generated in your dashboard.</p></details>
+            <details class="card"><summary>What happens when my website goes down?</summary><p>The check is recorded as Down with the reason, and the dashboard shows it immediately. Email or push alerts are not available yet.</p></details>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="card cta-band reveal">
+            <h2>Start monitoring in a minute</h2>
+            <p>Create a free account and add your first website.</p>
+            <button class="btn btn-primary btn-lg" data-open-auth="register">Get Started Free</button>
+          </div>
+        </div>
+      </section>
     </main>
+
+    <footer class="footer">
+      <div class="container footer-grid">
+        <div>
+          <a class="logo" href="#top"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4" /></svg></span>Health Monitor</a>
+          <p>Simple website availability and performance monitoring.</p>
+        </div>
+        <div><h4>Product</h4><ul><li><a href="#features">Features</a></li><li><a href="#how">How it works</a></li><li><a href="#demo">Live demo</a></li></ul></div>
+        <div><h4>Resources</h4><ul><li><a href="/docs" target="_blank" rel="noopener">API documentation</a></li><li><a href="#faq">FAQ</a></li></ul></div>
+      </div>
+      <div class="container copyright">© Website Health Monitor</div>
+    </footer>
+
+    <dialog id="auth-dialog" aria-labelledby="auth-title">
+      <div class="dialog-body">
+        <h2 class="dialog-title" id="auth-title">Welcome</h2>
+        <p class="muted small" style="margin-bottom: 16px">Sign in or create an account to open your dashboard.</p>
+        <div class="tabs" role="tablist">
+          <button class="tab active" role="tab" data-auth-tab="login" type="button">Login</button>
+          <button class="tab" role="tab" data-auth-tab="register" type="button">Create account</button>
+        </div>
+        <form class="auth-form" id="login-form" novalidate>
+          <div class="field"><label for="login-email">Email</label><input id="login-email" type="email" autocomplete="email" required /></div>
+          <div class="field"><label for="login-password">Password</label><input id="login-password" type="password" autocomplete="current-password" required /></div>
+          <button class="btn btn-primary" type="submit">Login</button>
+        </form>
+        <form class="auth-form hidden" id="register-form" novalidate>
+          <div class="field"><label for="reg-name">Name</label><input id="reg-name" type="text" autocomplete="name" required /></div>
+          <div class="field"><label for="reg-email">Email</label><input id="reg-email" type="email" autocomplete="email" required /></div>
+          <div class="field"><label for="reg-password">Password <span class="muted">(at least 8 characters)</span></label><input id="reg-password" type="password" autocomplete="new-password" required /></div>
+          <button class="btn btn-primary" type="submit">Create account</button>
+        </form>
+        <p class="auth-error" id="auth-error" role="alert"></p>
+        <div class="dialog-actions" style="margin-top: 6px"><button class="btn btn-sm" type="button" id="auth-close">Close</button></div>
+      </div>
+    </dialog>
 
     <script src="/static/script.js"></script>
   </body>
