@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Website Health Monitor",
   "version": "1.0.0",
-  "description": "Real-time uptime status, response latency, and one-click manual health checks for your monitored websites.",
+  "description": "Real-time uptime status, response latency, and 1-click health checks for your monitored websites.",
   "permissions": [
     "storage",
     "activeTab"
@@ -12,20 +12,6 @@
     "http://localhost:8000/*",
     "https://*/*"
   ],
-  "action": {
-    "default_popup": "popup.html",
-    "default_title": "Website Health Monitor",
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
-    }
-  },
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
   "background": {
     "service_worker": "background.js"
   },
@@ -48,7 +34,21 @@
       "js": [
         "content.js"
       ],
-      "run_at": "document_idle"
+      "run_at": "document_start"
     }
-  ]
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Website Health Monitor",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
 }

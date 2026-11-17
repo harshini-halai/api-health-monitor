@@ -9,23 +9,23 @@ const STORAGE_KEYS = {
 chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
   if (!message || typeof message !== "object") return false;
 
-  // Website checks if extension is installed
   if (message.type === "WHM_PING") {
-    chrome.storage.local.get([STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER], (data) => {
+    chrome.storage.local.get([STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER, STORAGE_KEYS.API_BASE], (data) => {
       sendResponse({
         installed: true,
         connected: Boolean(data[STORAGE_KEYS.TOKEN]),
-        user: data[STORAGE_KEYS.USER] || null
+        user: data[STORAGE_KEYS.USER] || null,
+        apiBaseUrl: data[STORAGE_KEYS.API_BASE] || null
       });
     });
     return true;
   }
 
-  // Website sends pairing code + origin -> extension exchanges it automatically
   if (message.type === "WHM_AUTO_PAIR" && message.code) {
     (async () => {
       try {
-        const apiBase = (message.apiBaseUrl || WHM_CONFIG.DEFAULT_API_BASE_URL).replace(/\/+$/, "");
+        const senderOrigin = sender?.url ? new URL(sender.url).origin : null;
+        const apiBase = (message.apiBaseUrl || senderOrigin || WHM_CONFIG.DEFAULT_API_BASE_URL).replace(/\/+$/, "");
         const res = await fetch(`${apiBase}/extension/pair/exchange`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -49,7 +49,6 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
     return true;
   }
 
-  // Website disconnects extension remotely
   if (message.type === "WHM_REMOTE_DISCONNECT") {
     chrome.storage.local.remove([STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER], () => {
       sendResponse({ ok: true });

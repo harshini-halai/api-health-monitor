@@ -89,6 +89,7 @@ def start_scheduler() -> None:
         prune_old_data, "interval", hours=24, id="prune",
         max_instances=1, misfire_grace_time=3600, replace_existing=True,
     )
+    scheduler.add_job(keep_render_awake, "interval", minutes=10, id="keep_render_awake", replace_existing=True)
     scheduler.start()
     log.info("Scheduler started: checks every %d minute(s)", config.CHECK_INTERVAL_MINUTES)
 
@@ -96,3 +97,17 @@ def start_scheduler() -> None:
 def stop_scheduler() -> None:
     if scheduler.running:
         scheduler.shutdown(wait=False)
+
+
+def keep_render_awake():
+    """Ping /health every 10 minutes on Render so free-tier instance never sleeps."""
+    import os
+    import urllib.request
+    base = os.getenv("RENDER_EXTERNAL_URL", "").strip().rstrip("/")
+    if not base:
+        return
+    try:
+        with urllib.request.urlopen(f"{base}/health", timeout=10) as resp:
+            resp.read()
+    except Exception:
+        pass

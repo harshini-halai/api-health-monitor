@@ -7,3 +7,4 @@ monitor.db-wal
 monitor.db-shm
 monitor.db.bak
 *.bak
+.jwt_secret

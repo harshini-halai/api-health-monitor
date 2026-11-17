@@ -274,3 +274,9 @@ Before exposing this to the internet:
 3. Deployment guide and hosted demo
 4. Health reports, Privacy and Terms pages
 5. Wider automated tests, and a separate worker for scaled deployments
+
+## Chrome Extension (Manifest V3)
+1. Load `extension/` via `chrome://extensions` (**Developer mode** -> **Load unpacked**) or download it directly from **Dashboard -> Chrome Extension**.
+2. Click **Connect Extension (1-Click)** in the dashboard to pair automatically.
+3. Click **+ Monitor** inside the extension popup to add and check the currently open website tab in one click.
+4. For production deployment, set `JWT_SECRET` in your hosting environment variables and set your production URL in `extension/config.js` (or via the gear icon in the extension header).

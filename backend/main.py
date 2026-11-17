@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -39,6 +40,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"^chrome-extension://.*$",
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+)
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
