@@ -111,8 +111,8 @@
             <div class="card feature reveal"><div class="ico">▥</div><h3>Performance analytics</h3><p>Charts for response time, observed availability and check activity.</p><span class="badge live">Available</span></div>
             <div class="card feature reveal"><div class="ico">⊞</div><h3>Multiple websites</h3><p>Add, edit, pause and remove websites from a single dashboard.</p><span class="badge live">Available</span></div>
             <div class="card feature reveal"><div class="ico">●</div><h3>Clear status indicators</h3><p>Operational, Degraded, Down or Unknown, with the reason shown for every non-healthy check.</p><span class="badge live">Available</span></div>
-            <div class="card feature reveal"><div class="ico">⧉</div><h3>Chrome extension</h3><p>Check your websites from the browser toolbar after pairing with your account.</p><span class="badge soon">Coming soon</span></div>
-            <div class="card feature reveal"><div class="ico">▤</div><h3>Health reports</h3><p>Shareable summaries of how your sites have been doing.</p><span class="badge soon">Coming soon</span></div>
+            <div class="card feature reveal"><div class="card feature reveal"><div class="ico">⧉</div><h3>Chrome extension</h3><p>Check your websites from the browser toolbar and run instant checks. Pair it with your account using a one-time code.</p><span class="badge live">Available</span></div>
+            <div class="card feature reveal"><div class="ico">✉</div><h3>Email alerts</h3><p>Get an email when a site goes down and another when it recovers. You choose how many failed checks in a row trigger an alert.</p><span class="badge live">Available</span></div>
           </div>
         </div>
       </section>
@@ -153,8 +153,8 @@
             <details class="card"><summary>Does monitoring work when my browser is closed?</summary><p>Yes. Checks are run by the backend scheduler, not by your browser.</p></details>
             <details class="card"><summary>What does response time mean?</summary><p>The time between sending the request and receiving the server's response headers, including any redirects, in milliseconds.</p></details>
             <details class="card"><summary>What do Operational, Degraded and Down mean?</summary><p><b>Operational:</b> a successful 2xx response that arrived quickly. <b>Degraded:</b> the server responded but something is off (a redirect that did not resolve, a 4xx response, or a very slow 2xx). <b>Down:</b> a 5xx error, or the site could not be reached (timeout, DNS or SSL failure).</p></details>
-            <details class="card"><summary>How will the Chrome extension connect?</summary><p>The extension is not available yet. It will connect through a short-lived one-time pairing code generated in your dashboard.</p></details>
-            <details class="card"><summary>What happens when my website goes down?</summary><p>The check is recorded as Down with the reason, and the dashboard shows it immediately. Email or push alerts are not available yet.</p></details>
+            <details class="card"><summary>How does the Chrome extension connect?</summary><p>Open <b>Chrome Extension</b> in your dashboard and generate a one-time pairing code (valid for a few minutes). Paste it into the extension popup, or use 1-click connect. The extension then gets its own revocable token, and you can disconnect it from the dashboard at any time. For now it is installed manually (download the zip from the dashboard and load it in Chrome developer mode).</p></details>
+            <details class="card"><summary>What happens when my website goes down?</summary><p>The check is recorded as Down with the reason and the dashboard shows it immediately. If you have verified an alert email address, you get a Down email after the number of consecutive failed checks you set (1 to 5), and a Recovered email when the site is back. Incidents are listed under Alerts &amp; Incidents. Push notifications are not available yet.</p></details>
           </div>
         </div>
       </section>

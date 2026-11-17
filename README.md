@@ -2,7 +2,7 @@
 
 A SaaS-style web application that monitors the availability, response time, and history of your websites from one dashboard. Checks run automatically on the backend every 5 minutes, so monitoring continues even when your browser is closed.
 
-> **Status:** working MVP for local use. The Chrome extension and production deployment are planned, not built yet (see [Roadmap](#roadmap)).
+> **Status:** working MVP for local use. Monitoring, email alerts and the Chrome extension are built. The deployment guide, hosted demo and health reports are still pending (see [Roadmap](#roadmap)).
 
 ---
 
@@ -22,13 +22,15 @@ A SaaS-style web application that monitors the availability, response time, and 
 - Light and dark themes, responsive layout
 - SSRF protections for user-submitted URLs
 - Interactive API documentation (Swagger)
+- **Email alerts:** verified alert address, configurable failure threshold (1 to 5 consecutive Down checks), Down and Recovered emails, retry with backoff, incident list
+- **Chrome extension (Manifest V3):** toolbar popup with site status and latency, one-click manual checks, one-time pairing code (or 1-click connect), hashed and revocable tokens, remote disconnect
 
 **Planned**
 
-- Chrome extension (Manifest V3) with secure one-time pairing
-- Settings page, health reports, email or push alerts
+- Health reports (shareable summaries)
+- Push notifications and other alert channels
 - Privacy Policy and Terms pages
-- Deployment guide
+- Deployment guide and Chrome Web Store listing
 
 ---
 
@@ -54,7 +56,7 @@ A SaaS-style web application that monitors the availability, response time, and 
 ## Architecture
 
 ```text
-Browser (landing, dashboard)           Chrome extension (planned)
+Browser (landing, dashboard)           Chrome extension (popup)
             |                                     |
             +---------------+---------------------+
                             |
@@ -89,7 +91,10 @@ api-health-monitor/
 │   ├── models.py       Users, websites, checks, extension pairing/tokens
 │   ├── schemas.py      Pydantic request/response models
 │   ├── security.py     Password hashing, JWT, pairing-code helpers
-│   ├── auth.py         Register, login, current user
+│   ├── auth.py         Register, login, current user, extension pairing
+│   ├── alerts.py       Incidents, alert emails, retry queue
+│   ├── alert_routes.py Alert settings, verification, test email, incidents API
+│   ├── notifications.py SMTP email sending
 │   ├── websites.py     Website CRUD, history, stats, analytics
 │   ├── monitor.py      Monitoring engine and SSRF protection
 │   ├── checks.py       Runs and stores a check (overlap guard)
@@ -101,7 +106,11 @@ api-health-monitor/
 │   ├── script.js       Landing page logic (auth dialog, live demo)
 │   ├── dashboard.html  Dashboard page
 │   ├── dashboard.css   Dashboard styles
-│   └── dashboard.js    Dashboard logic and charts
+│   ├── dashboard.js    Dashboard logic and charts
+│   ├── alerts.html     Alerts and incidents page
+│   └── alerts.js       Alerts page logic
+├── extension/          Chrome extension (Manifest V3), see extension/README.md
+├── tests/              pytest tests (alerts)
 ├── .env.example
 ├── requirements.txt
 └── README.md
@@ -164,7 +173,10 @@ On startup the terminal should show `Scheduler started: every 5 minute(s)`.
 | `REQUEST_TIMEOUT_SECONDS` | `10` | Timeout for each HTTP request |
 | `SCHEDULER_ENABLED` | `true` | Set to `false` to disable the scheduler |
 | `DATABASE_URL` | local SQLite file | Override the database location |
-| `EXTENSION_TOKEN_DAYS`, `PAIRING_CODE_MINUTES` | `30`, `10` | Reserved for the Chrome extension |
+| `EXTENSION_TOKEN_DAYS`, `PAIRING_CODE_MINUTES` | `30`, `10` | Chrome extension token lifetime and pairing-code lifetime |
+| `APP_BASE_URL` | `http://127.0.0.1:8000` | Base URL used for links inside emails. Set to your public URL when deployed |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USE_SSL` | *(empty)*, `587`, `false` | Outgoing email server. Alerts are disabled until `SMTP_HOST` and `EMAIL_FROM` are set |
+| `SMTP_USERNAME`, `SMTP_PASSWORD`, `EMAIL_FROM` | *(empty)* | SMTP login and sender address. For Gmail use an App password |
 
 ---
 
@@ -186,6 +198,15 @@ Full interactive documentation is available at `/docs`. Endpoints marked 🔒 ne
 | POST | `/websites/{id}/check` 🔒 | Run a check now |
 | GET | `/websites/{id}/history` 🔒 | Check history for one website |
 | GET | `/websites/{id}/stats` 🔒 | Stats and time series for one website |
+| POST | `/extension/pair/start` 🔒 | Generate a one-time pairing code |
+| POST | `/extension/pair/exchange` | Exchange a pairing code for an extension token |
+| GET | `/extension/status` 🔒 | Active extension sessions |
+| POST | `/extension/disconnect` 🔒 | Revoke extension tokens |
+| GET | `/extension/download` | Download the extension as a zip |
+| GET / PUT | `/alerts/settings` 🔒 | Alert email, on/off, failure threshold |
+| POST | `/alerts/verification` 🔒 | Send the email verification link |
+| POST | `/alerts/test` 🔒 | Send a test alert email (rate limited) |
+| GET | `/alerts/incidents` 🔒 | List incidents |
 | POST | `/demo/check` | Public live check for the landing page (rate limited, not saved) |
 | GET | `/health` | Service health |
 
@@ -228,7 +249,8 @@ Every website query is filtered by the logged-in user, so users can only access 
 - A website's URL cannot be edited. Delete it and add it again.
 - Monitoring only checks a single URL, so it does not detect content problems, expired-certificate warnings, or multi-step failures.
 - Checks older than 90 days are deleted automatically.
-- No automated test suite is included yet.
+- Automated tests currently cover alerts only. Monitoring, auth and extension pairing are not covered yet.
+- The extension is installed manually (developer mode). It is not on the Chrome Web Store, and `extension/config.js` and `manifest.json` must be pointed at your production domain after deployment.
 
 ---
 
@@ -247,8 +269,8 @@ Before exposing this to the internet:
 
 ## Roadmap
 
-1. Chrome extension (Manifest V3) with one-time pairing codes, hashed tokens, and a disconnect/revoke option
-2. Deployment guide and hosted demo
-3. Alerts when a website goes down
-4. Settings page, health reports, Privacy and Terms pages
-5. Automated tests, and a separate worker for scaled deployments
+1. ~~Chrome extension~~ done
+2. ~~Email alerts when a website goes down~~ done
+3. Deployment guide and hosted demo
+4. Health reports, Privacy and Terms pages
+5. Wider automated tests, and a separate worker for scaled deployments
