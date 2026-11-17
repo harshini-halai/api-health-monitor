@@ -14,7 +14,7 @@ from backend.models import MonitoringCheck, Notification, Website
 log = logging.getLogger("whm.scheduler")
 scheduler = BackgroundScheduler(timezone="UTC")
 
-# Hide the "Running job ... executed successfully" spam (still shows warnings and errors)
+# Hide the "Running job ... executed successfully" spam (warnings and errors still show)
 logging.getLogger("apscheduler.executors.default").setLevel(logging.WARNING)
 
 MAX_WORKERS = 5
