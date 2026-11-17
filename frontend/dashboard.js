@@ -765,7 +765,8 @@
               : `<ol class="small muted" style="margin-top:12px; padding-left:18px; line-height:1.6;">
                   <li>Unzip <code>website-health-monitor-extension.zip</code></li>
                   <li>Open <code>chrome://extensions</code> &rarr; enable <strong>Developer mode</strong></li>
-                  <li>Click <strong>Load unpacked</strong> &rarr; select the unzipped folder, then refresh this page</li>
+                  <li>Click <strong>Load unpacked</strong> &rarr; select the unzipped folder (already pre-configured for <code>api-health-monitor-lcx5.onrender.com</code>)</li>
+                  <li>Refresh this page and click <strong>Connect Extension (1-Click)</strong> below</li>
                 </ol>`
           }
         </div>
