@@ -37,7 +37,12 @@
   }
   async function loadStorage() {
     const data = await chrome.storage.local.get([STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER, STORAGE_KEYS.API_BASE]);
-    apiBaseUrl = (data[STORAGE_KEYS.API_BASE] || WHM_CONFIG.DEFAULT_API_BASE_URL).replace(/\/+$/, "");
+    let savedBase = (data[STORAGE_KEYS.API_BASE] || "").replace(/\/+$/, "");
+    if (!savedBase || savedBase.includes("127.0.0.1") || savedBase.includes("localhost")) {
+      savedBase = WHM_CONFIG.DEFAULT_API_BASE_URL;
+      await chrome.storage.local.set({ [STORAGE_KEYS.API_BASE]: savedBase });
+    }
+    apiBaseUrl = savedBase;
     extToken = data[STORAGE_KEYS.TOKEN] || null;
     currentUser = data[STORAGE_KEYS.USER] || null;
     $("#api-url-input").value = apiBaseUrl;

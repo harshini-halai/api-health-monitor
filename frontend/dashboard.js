@@ -704,7 +704,6 @@
     const EXT_ID_KEY = "whm_chrome_ext_id";
     let detectedExtId = localStorage.getItem(EXT_ID_KEY) || "";
 
-    // Listen for automatic announcement from extension/content.js
     const onExtMsg = (ev) => {
       if (ev.source === window && ev.data?.type === "WHM_EXTENSION_READY" && ev.data.extensionId) {
         detectedExtId = ev.data.extensionId;
@@ -736,62 +735,124 @@
     const isInstalled = Boolean(ping?.installed);
 
     el.innerHTML = `
-      <div class="card" style="padding:24px; max-width:620px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px;">
+      <div class="card" style="padding:24px; max-width:720px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
           <div>
             <h3 style="margin-bottom:4px;">Chrome Extension</h3>
-            <p class="muted small">Monitor any open website in 1 click and get instant status checks from Chrome.</p>
+            <p class="muted small">Monitor any open website in 1 click directly from your Chrome toolbar.</p>
           </div>
           <span class="pill ${status.active_tokens > 0 ? "operational" : "unknown"}">
             ${status.active_tokens > 0 ? "Connected" : isInstalled ? "Ready to pair" : "Not installed"}
           </span>
         </div>
 
-        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:18px;">
+        <!-- STEP 1: INSTALL -->
+        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px;">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
             <div>
-              <strong style="font-size:14px;">Step 1: Install Extension</strong>
+              <strong style="font-size:14px;">Step 1: Install Extension in Chrome</strong>
               <p class="muted small" style="margin-top:3px;">
-                ${isInstalled ? "Extension is active in your Chrome browser." : "Download the extension package, unzip it, and load it in Chrome."}
+                ${isInstalled ? "Extension is installed and active in your Chrome browser." : "Pre-configured for <code>api-health-monitor-lcx5.onrender.com</code> ? no URL setup needed."}
               </p>
             </div>
             <a class="btn btn-sm ${isInstalled ? "" : "btn-primary"}" href="/extension/download" download>
               ${isInstalled ? "Re-download (.zip)" : "Download Extension (.zip)"} &#8595;
             </a>
           </div>
-          ${
-            isInstalled
-              ? ""
-              : `<ol class="small muted" style="margin-top:12px; padding-left:18px; line-height:1.6;">
-                  <li>Unzip <code>website-health-monitor-extension.zip</code></li>
-                  <li>Open <code>chrome://extensions</code> &rarr; enable <strong>Developer mode</strong></li>
-                  <li>Click <strong>Load unpacked</strong> &rarr; select the unzipped folder (already pre-configured for <code>api-health-monitor-lcx5.onrender.com</code>)</li>
-                  <li>Refresh this page and click <strong>Connect Extension (1-Click)</strong> below</li>
-                </ol>`
-          }
+          <ol class="small muted" style="margin-top:12px; padding-left:20px; line-height:1.7;">
+            <li>Download and <strong>unzip (Extract All)</strong> <code>website-health-monitor-extension.zip</code></li>
+            <li>Open <code>chrome://extensions</code> in a new tab and turn ON <strong>Developer mode</strong> (top-right)</li>
+            <li>Click <strong>Load unpacked</strong> and select the extracted folder, then refresh this page</li>
+          </ol>
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-          <div>
-            <strong style="font-size:14px;">Step 2: Connect Your Account</strong>
-            <p class="muted small" style="margin-top:2px;">
-              ${isInstalled ? "No code typing needed ? pairs automatically in 1 click." : "Generates a single-use pairing code if connecting manually."}
-            </p>
+        <!-- STEP 2: CONNECT (AUTOMATIC + MANUAL) -->
+        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+            <div>
+              <strong style="font-size:14px;">Step 2: Connect Your Account</strong>
+              <p class="muted small" style="margin-top:2px;">Choose 1-Click Automatic pairing or Manual pairing code.</p>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn btn-primary" id="ext-generate-btn">
+                ${isInstalled ? "Connect Extension (1-Click)" : "Connect / Generate Code"}
+              </button>
+              <button class="btn btn-sm" id="ext-manual-code-btn">Get Manual Code</button>
+              ${status.active_tokens > 0 ? '<button class="btn btn-danger" id="ext-revoke-btn">Disconnect</button>' : ""}
+            </div>
           </div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="btn btn-primary" id="ext-generate-btn">
-              ${isInstalled ? "Connect Extension (1-Click)" : "Connect Extension"}
-            </button>
-            ${status.active_tokens > 0 ? '<button class="btn btn-danger" id="ext-revoke-btn">Disconnect</button>' : ""}
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:12px; margin-top:10px;">
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px;">
+              <div style="font-weight:700; font-size:12.5px; color:var(--accent); margin-bottom:4px;">&#9889; Option A: Automatic (1-Click)</div>
+              <p class="small muted" style="line-height:1.55;">
+                Click <strong>Connect Extension (1-Click)</strong> above. Your browser automatically detects the extension and pairs your account in the background ? zero typing needed.
+              </p>
+            </div>
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px;">
+              <div style="font-weight:700; font-size:12.5px; margin-bottom:4px;">&#128273; Option B: Manual Pairing Code</div>
+              <p class="small muted" style="line-height:1.55;">
+                Click <strong>Get Manual Code</strong>, copy the 8-character code (<code>XXXX-XXXX</code>), open the extension icon in Chrome toolbar, paste it, and click <strong>Pair with Code</strong>.
+              </p>
+            </div>
+          </div>
+
+          <div id="ext-code-box" class="hidden" style="background:var(--surface); border:1px dashed var(--accent); border-radius:10px; padding:14px; margin-top:14px; text-align:center;">
+            <div class="small muted" style="margin-bottom:4px;">One-Time Manual Pairing Code (valid 10 min)</div>
+            <div style="display:flex; justify-content:center; align-items:center; gap:10px; flex-wrap:wrap;">
+              <span id="ext-pairing-code" style="font-size:24px; font-weight:800; letter-spacing:0.14em; font-family:monospace; color:var(--accent);"></span>
+              <button type="button" class="btn btn-xs" id="ext-copy-code-btn">Copy Code</button>
+            </div>
           </div>
         </div>
 
-        <div id="ext-code-box" class="hidden" style="background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:14px; margin-top:16px; text-align:center;">
-          <div class="small muted" style="margin-bottom:4px;">One-Time Pairing Code (valid 10 min)</div>
-          <div id="ext-pairing-code" style="font-size:24px; font-weight:800; letter-spacing:0.14em; font-family:monospace; color:var(--accent);"></div>
+        <!-- STEP 3: TRY IT OUT (MONITOR ANY OPEN WEBSITE) -->
+        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+            <strong style="font-size:14px;">&#128640; Step 3: Try It Out ? Monitor Any Open Website</strong>
+            <a class="btn btn-xs" href="https://example.com" target="_blank" rel="noopener noreferrer">Open Sample Site &#8599;</a>
+          </div>
+          <ol class="small muted" style="padding-left:20px; line-height:1.7;">
+            <li>Open any website you want to track in a Chrome tab (for example, click <strong>Open Sample Site</strong> on the right).</li>
+            <li>Click the <strong>Website Health Monitor</strong> icon in your Chrome toolbar (pin it from the &#129513; Extensions puzzle menu for easy access).</li>
+            <li>At the top bar next to <strong>Current Site</strong>, click <strong>+ Monitor</strong> ? it immediately registers the site, runs a live health check, and shows HTTP status &amp; latency!</li>
+          </ol>
         </div>
       </div>
     `;
+
+    async function showManualCode(btn) {
+      const origText = btn.textContent;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Generating?';
+      try {
+        const res = await api("/extension/pair/start", { method: "POST" });
+        $("#ext-pairing-code").textContent = res.code;
+        $("#ext-code-box").classList.remove("hidden");
+        toast("Manual pairing code generated!", "success");
+      } catch (err) {
+        toast(err.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    }
+
+    $("#ext-manual-code-btn").addEventListener("click", (ev) => showManualCode(ev.currentTarget));
+
+    const copyBtn = $("#ext-copy-code-btn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        const code = $("#ext-pairing-code").textContent.trim();
+        if (!code) return;
+        try {
+          await navigator.clipboard.writeText(code);
+          toast("Pairing code copied!", "success");
+        } catch {
+          toast("Select and copy the code above", "info");
+        }
+      });
+    }
 
     $("#ext-generate-btn").addEventListener("click", async (ev) => {
       const btn = ev.currentTarget;
@@ -816,12 +877,12 @@
 
         $("#ext-pairing-code").textContent = res.code;
         $("#ext-code-box").classList.remove("hidden");
-        toast("Pairing code generated!", "success");
+        toast("Auto-detect unavailable ? paste the code above into the extension.", "info");
       } catch (err) {
         toast(err.message, "error");
       } finally {
         btn.disabled = false;
-        btn.textContent = isInstalled ? "Connect Extension (1-Click)" : "Connect Extension";
+        btn.textContent = isInstalled ? "Connect Extension (1-Click)" : "Connect / Generate Code";
       }
     });
 
