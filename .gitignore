@@ -6,3 +6,4 @@ monitor.db
 monitor.db-wal
 monitor.db-shm
 monitor.db.bak
+*.bak
