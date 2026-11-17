@@ -14,9 +14,13 @@ from backend.models import MonitoringCheck, Notification, Website
 log = logging.getLogger("whm.scheduler")
 scheduler = BackgroundScheduler(timezone="UTC")
 
+# Hide the "Running job ... executed successfully" spam (still shows warnings and errors)
+logging.getLogger("apscheduler.executors.default").setLevel(logging.WARNING)
+
 MAX_WORKERS = 5
 CHECK_RETENTION_DAYS = 90
 NOTIFICATION_RETENTION_DAYS = 30
+MISFIRE_GRACE_SECONDS = 20  # a job up to 20 s late still runs instead of being skipped
 
 
 def _check_one(website_id: int) -> None:
@@ -24,7 +28,17 @@ def _check_one(website_id: int) -> None:
         with SessionLocal() as db:
             site = db.get(Website, website_id)
             if site is not None and site.monitoring_enabled:
-                run_check(db, site)
+                check = run_check(db, site)
+                if check is not None:
+                    ms = f"{check.response_time_ms:.0f} ms" if check.response_time_ms is not None else "n/a"
+                    log.info(
+                        "Checked %s -> %s (HTTP %s, %s)%s",
+                        site.url,
+                        check.health_status,
+                        check.status_code,
+                        ms,
+                        f" error: {check.error_message}" if check.error_message else "",
+                    )
     except Exception:
         log.exception("Scheduled check failed for website %s", website_id)
 
@@ -61,15 +75,20 @@ def start_scheduler() -> None:
         id="check_all",
         max_instances=1,
         coalesce=True,
+        misfire_grace_time=MISFIRE_GRACE_SECONDS,
         replace_existing=True,
         next_run_time=datetime.now(timezone.utc) + timedelta(seconds=15),
     )
     # Safety net: sends emails queued outside a scheduled run and retries failed ones.
     scheduler.add_job(
         dispatch_pending, "interval", seconds=30, id="dispatch_notifications",
-        max_instances=1, coalesce=True, replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=MISFIRE_GRACE_SECONDS,
+        replace_existing=True,
     )
-    scheduler.add_job(prune_old_data, "interval", hours=24, id="prune", max_instances=1, replace_existing=True)
+    scheduler.add_job(
+        prune_old_data, "interval", hours=24, id="prune",
+        max_instances=1, misfire_grace_time=3600, replace_existing=True,
+    )
     scheduler.start()
     log.info("Scheduler started: checks every %d minute(s)", config.CHECK_INTERVAL_MINUTES)
 
