@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend import security
+from backend.alert_routes import router as alerts_router
 from backend.auth import router as auth_router
 from backend.database import init_db
 from backend.monitor import UnsafeURLError, check_website, coerce_scheme, validate_public_url
@@ -34,19 +35,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Website Health Monitor",
     description="Monitor website availability, response time and history.",
-    version="2.0.0",
+    version="2.1.0",
     lifespan=lifespan,
 )
 
-from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origin_regex=r"^chrome-extension://.*$",
-    allow_credentials=False,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
-)
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
@@ -77,6 +69,7 @@ def _demo_allowed(ip: str) -> bool:
 
 app.include_router(auth_router)
 app.include_router(websites_router)
+app.include_router(alerts_router)
 
 
 @app.get("/health", tags=["system"])
@@ -110,3 +103,8 @@ def home():
 @app.get("/dashboard", include_in_schema=False)
 def dashboard():
     return FileResponse(FRONTEND_DIR / "dashboard.html")
+
+
+@app.get("/dashboard/alerts", include_in_schema=False)
+def dashboard_alerts():
+    return FileResponse(FRONTEND_DIR / "alerts.html")
