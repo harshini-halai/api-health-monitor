@@ -1,4 +1,31 @@
 import os
+import secrets
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def _ensure_jwt_secret() -> str:
+    val = os.getenv("JWT_SECRET", "").strip()
+    if val:
+        return val
+    secret_file = Path(__file__).resolve().parent.parent / ".jwt_secret"
+    if secret_file.exists():
+        val = secret_file.read_text(encoding="utf-8").strip()
+        if val:
+            os.environ["JWT_SECRET"] = val
+            return val
+    val = secrets.token_urlsafe(48)
+    try:
+        secret_file.write_text(val, encoding="utf-8")
+    except Exception:
+        pass
+    os.environ["JWT_SECRET"] = val
+    return val
+
+_ensure_jwt_secret()
+
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv

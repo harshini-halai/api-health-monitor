@@ -37,19 +37,22 @@
         </div>
         <div class="preset-row">
           <button type="button" class="link-btn" data-preset="local">Use Local (8000)</button>
-          <button type="button" class="link-btn" data-preset="production">Use Production</button>
+          <button type="button" class="link-btn" data-preset="production">Use Render Production</button>
         </div>
       </section>
 
       <div class="banner hidden" id="alert-banner" role="status"></div>
 
+      <!-- Current Open Website Bar with 1-Click Monitor -->
       <section class="tab-bar hidden" id="current-tab-bar">
         <div class="tab-info">
-          <span class="tab-label">Active Tab:</span>
+          <span class="tab-label">Current Site:</span>
           <span class="tab-url" id="current-tab-url" title=""></span>
         </div>
-        <span class="tab-status" id="current-tab-status"></span>
-        <button type="button" class="btn btn-xs btn-primary hidden" id="add-current-btn">+ Monitor this site</button>
+        <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+          <span class="tab-status" id="current-tab-status"></span>
+          <button type="button" class="btn btn-xs btn-primary hidden" id="monitor-current-btn">+ Monitor</button>
+        </div>
       </section>
 
       <main class="view" id="pairing-view">
@@ -57,16 +60,18 @@
           <div class="pairing-icon">&#128279;</div>
           <h1>Connect Your Account</h1>
           <p class="muted">
-            Open your <strong>Website Health Monitor</strong> dashboard, go to <em>Chrome Extension</em>, and generate a one-time pairing code.
+            Click below to open your dashboard and press <strong>Connect Extension (1-Click)</strong>, or paste a pairing code.
           </p>
-          <form id="pairing-form" class="pairing-form">
-            <label class="field-label" for="pairing-code-input">8-Character Pairing Code</label>
-            <input type="text" id="pairing-code-input" class="code-input" placeholder="XXXX-XXXX" maxlength="9" autocomplete="off" spellcheck="false" required />
-            <button type="submit" class="btn btn-primary btn-block" id="connect-btn">Connect Extension</button>
-          </form>
-          <div class="pairing-help">
-            <button type="button" class="btn btn-sm btn-block" id="pair-open-dashboard">Open Dashboard to Get Code &#8599;</button>
+          <div style="margin-bottom:14px;">
+            <button type="button" class="btn btn-primary btn-block" id="pair-open-dashboard">
+              1-Click Connect via Dashboard &#8599;
+            </button>
           </div>
+          <form id="pairing-form" class="pairing-form">
+            <label class="field-label" for="pairing-code-input">Or enter 8-character pairing code</label>
+            <input type="text" id="pairing-code-input" class="code-input" placeholder="XXXX-XXXX" maxlength="9" autocomplete="off" spellcheck="false" required />
+            <button type="submit" class="btn btn-sm btn-block" id="connect-btn">Pair with Code</button>
+          </form>
         </div>
       </main>
 
@@ -98,7 +103,7 @@
           <button type="button" class="btn btn-sm btn-primary" id="dashboard-btn">Open Dashboard &#8599;</button>
         </div>
         <div class="footer-note">
-          Auto-monitored every 5m by backend &middot; <a href="#" id="help-link">Pairing Help</a>
+          Auto-monitored every 5m by backend &middot; <a href="#" id="help-link">Help</a>
         </div>
       </footer>
     </div>

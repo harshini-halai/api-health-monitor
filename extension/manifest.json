@@ -36,5 +36,19 @@
       "https://*.onrender.com/*",
       "https://*.vercel.app/*"
     ]
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://127.0.0.1:8000/*",
+        "http://localhost:8000/*",
+        "https://*.onrender.com/*",
+        "https://*.vercel.app/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
 }
