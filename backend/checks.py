@@ -2,6 +2,7 @@ import threading
 
 from sqlalchemy.orm import Session
 
+from backend.alerts import process_check
 from backend.models import MonitoringCheck, Website
 from backend.monitor import check_website
 
@@ -22,6 +23,7 @@ def run_check(db: Session, website: Website) -> MonitoringCheck | None:
         db.add(check)
         db.commit()
         db.refresh(check)
+        process_check(db, website, check)  # never raises
         return check
     finally:
         with _lock:
