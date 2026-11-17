@@ -10,6 +10,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator
@@ -132,3 +133,78 @@ class ExtensionToken(Base):
     expires_at: Mapped[datetime] = mapped_column(UTCDateTime)
     last_used_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     revoked_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+
+
+# ---------------------------------------------------------------------------
+# Alerting
+# ---------------------------------------------------------------------------
+
+
+class AlertSettings(Base):
+    """One row per user. Alerts are only sent to a verified address."""
+
+    __tablename__ = "alert_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), unique=True
+    )
+    email: Mapped[str] = mapped_column(String(254))
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    failure_threshold: Mapped[int] = mapped_column(Integer, default=2)
+    verified_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    verify_token_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    verify_expires_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    verification_sent_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class Incident(Base):
+    """A period during which a website was down. resolved_at is NULL while ongoing."""
+
+    __tablename__ = "incidents"
+    __table_args__ = (
+        Index("ix_incidents_website_started", "website_id", "started_at"),
+        # Database-level guarantee: at most ONE open incident per website.
+        Index(
+            "uq_incident_one_open_per_website",
+            "website_id",
+            unique=True,
+            sqlite_where=text("resolved_at IS NULL"),
+            postgresql_where=text("resolved_at IS NULL"),
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    website_id: Mapped[int] = mapped_column(ForeignKey("websites.id", ondelete="CASCADE"))
+    started_at: Mapped[datetime] = mapped_column(UTCDateTime)
+    resolved_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    first_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_status_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class Notification(Base):
+    """Outbox: emails waiting to be sent (or already sent / failed)."""
+
+    __tablename__ = "notifications"
+    __table_args__ = (Index("ix_notifications_due", "status", "next_attempt_at"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    website_id: Mapped[int | None] = mapped_column(
+        ForeignKey("websites.id", ondelete="SET NULL"), nullable=True
+    )
+    incident_id: Mapped[int | None] = mapped_column(
+        ForeignKey("incidents.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    kind: Mapped[str] = mapped_column(String(20))  # down | recovered | verify
+    to_email: Mapped[str] = mapped_column(String(254))
+    subject: Mapped[str] = mapped_column(String(300))
+    body_text: Mapped[str] = mapped_column(Text)
+    body_html: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(10), default="pending")  # pending | sent | failed
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+    next_attempt_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+    sent_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
